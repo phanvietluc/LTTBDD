@@ -23,17 +23,23 @@ class _SignInPageState extends State<SignInPage> {
   signIn() async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      ScaffoldMessenger.of(context).showSnackBar((SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "Đăng nhập thành công",
+            style: TextStyle(fontSize: 20.0),
+          ))));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-              "No User Found for that Email",
+              "Email người dùng không tồn tại",
               style: TextStyle(fontSize: 18.0, color: Colors.black),
             )));
       }else if(e.code=='wrong-password'){
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-              "Wrong Password Provided by User",
+              "Nhập sai mật khẩu",
               style: TextStyle(fontSize: 18.0, color: Colors.black),
             )));
       }

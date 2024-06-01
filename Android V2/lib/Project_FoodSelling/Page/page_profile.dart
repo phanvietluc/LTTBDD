@@ -19,12 +19,9 @@ class _PageProfileState extends State<PageProfile> {
   @override
   void initState() {
     super.initState();
-    onThisLoad();
+    getUserData();
   }
 
-  onThisLoad() async {
-    await getUserData();
-  }
 
   getUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
