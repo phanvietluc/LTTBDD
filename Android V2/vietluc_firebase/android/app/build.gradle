@@ -27,7 +27,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "vn.edu.ntu.vietluc.vietluc_firebase"
-    compileSdkVersion flutter.compileSdkVersion
+    compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
     compileOptions {
