@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:random_string/random_string.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/shared_references.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/userdatabase.dart';
 class SignUpPage extends StatefulWidget {
   final Function()? onPress;
@@ -10,11 +8,12 @@ class SignUpPage extends StatefulWidget {
   @override
   State<SignUpPage> createState() => _SignUpPageState();
 }
+final _formKey = GlobalKey<FormState>();
 String p = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
 
 RegExp regExp = new RegExp(p);
 class _SignUpPageState extends State<SignUpPage> {
-  final _formKey = GlobalKey<FormState>();
+
   bool obserText = true;
   String email = "", name = "", password = "";
   TextEditingController userName = TextEditingController();
@@ -23,25 +22,21 @@ class _SignUpPageState extends State<SignUpPage> {
   void signUp() async{
     if(password != null){
       try{
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
         ScaffoldMessenger.of(context).showSnackBar((SnackBar(
             backgroundColor: Colors.green,
             content: Text(
               "Đăng ký thành công",
               style: TextStyle(fontSize: 20.0),
             ))));
-        String Id = randomAlphaNumeric(10);
+        String Id = FirebaseAuth.instance.currentUser!.uid;
         Map<String, dynamic> addUserInfo = {
           "name": userName.text,
           "email": userEmail.text,
           "id": Id,
+          "password": userPassword.text
         };
         await UserDatabase().addUserDetail(addUserInfo, Id);
-        await SharedReference().saveUserName(userName.text);
-        await SharedReference().saveUserEmail(userEmail.text);
-        await SharedReference().saveUserPassword(userPassword.text);
-        await SharedReference().saveUserId(Id);
-        //Navigator.pop(context, true);//Sau khi đăng ký xong sẽ hiện trên drawer trong trang chính
       }on FirebaseException catch (e) {
         if (e.code == "email-already-in-use") {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

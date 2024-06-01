@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/shared_references.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/signIn_signUp/forgot_password.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 class SignInPage extends StatefulWidget {
@@ -9,12 +8,12 @@ class SignInPage extends StatefulWidget {
   @override
   State<SignInPage> createState() => _SignInPageState();
 }
-
+final _formKey = GlobalKey<FormState>();
 String p = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
 
 RegExp regExp = new RegExp(p);
 class _SignInPageState extends State<SignInPage> {
-  final _formKey = GlobalKey<FormState>();
+
   bool obserText = true;
   String email = "", password = "";
 

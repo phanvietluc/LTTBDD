@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/shared_references.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PageProfile extends StatefulWidget {
   const PageProfile({super.key});
@@ -10,37 +10,61 @@ class PageProfile extends StatefulWidget {
 }
 
 class _PageProfileState extends State<PageProfile> {
-  String? name, email, password;
+  String? name, email;
   TextEditingController txtPassword = TextEditingController();
   bool isEditingPassword = false;
 
   bool obserText = true;
+
   @override
   void initState() {
     super.initState();
     onThisLoad();
   }
 
-  getTheSharedPref() async {
-    name = await SharedReference().getUserName();
-    email = await SharedReference().getUserEmail();
-    password = await SharedReference().getUserPassword();
-    setState(() {
-      txtPassword.text = password ?? '';
-    });
+  onThisLoad() async {
+    await getUserData();
   }
 
-  onThisLoad() async {
-    await getTheSharedPref();
+  getUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          var userData = userDoc.data();
+          setState(() {
+            name = userData?['name'];
+            email = userData?['email'];
+            txtPassword.text = userData?['password']; // Masking the password as it should not be directly accessible
+          });
+        }
+      } catch (e) {
+        print(e);
+      }
+    }
   }
+
   updatePassword() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null && txtPassword.text.isNotEmpty) {
       try {
         await user.updatePassword(txtPassword.text);
-        await SharedReference().saveUserPassword(txtPassword.text);
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'password': txtPassword.text,
+        });
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green,),
+                Text("Thay đổi mật khẩu thành công")
+              ],
+            ),
+          ),
+        );
         setState(() {
-          password = txtPassword.text;
           isEditingPassword = false;
         });
       } catch (e) {
@@ -68,7 +92,7 @@ class _PageProfileState extends State<PageProfile> {
                 SizedBox(height: 30.0),
                 profileInfoCard(Icons.email, "Email", email),
                 SizedBox(height: 30.0),
-                profileInfoCard(Icons.password, "Password", password),
+                profileInfoCard(Icons.password, "Password", '********'), // Masking the password
                 SizedBox(height: 30.0),
               ],
             ),
@@ -105,8 +129,8 @@ class _PageProfileState extends State<PageProfile> {
                       title,
                       style: TextStyle(color: Colors.black, fontSize: 16.0, fontWeight: FontWeight.w600),
                     ),
-                    isEditingPassword && title == "Password" ?
-                    TextField(
+                    isEditingPassword && title == "Password"
+                        ? TextField(
                       controller: txtPassword,
                       obscureText: obserText,
                       decoration: InputDecoration(
@@ -118,10 +142,14 @@ class _PageProfileState extends State<PageProfile> {
                             });
                             FocusScope.of(context).unfocus();
                           },
-                          child: Icon(obserText == true ? Icons.visibility : Icons.visibility_off, color: Colors.black,),
+                          child: Icon(
+                            obserText ? Icons.visibility : Icons.visibility_off,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                    ): Text(
+                    )
+                        : Text(
                       value ?? 'Loading...',
                       style: TextStyle(color: Colors.black, fontSize: 16.0, fontWeight: FontWeight.w600),
                     ),
@@ -149,5 +177,4 @@ class _PageProfileState extends State<PageProfile> {
       ),
     );
   }
-
 }

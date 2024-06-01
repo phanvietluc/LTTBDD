@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/Page/page_order.dart';
@@ -7,9 +8,7 @@ import 'package:viet_luc63132246_flutter/Project_FoodSelling/controller/controll
 import 'package:card_swiper/card_swiper.dart';
 import 'page_list_food_cate.dart';
 import 'page_details.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/shared_references.dart';
 import 'page_profile.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/AuthPage/authmethod.dart';
 class AppFoodSelling extends StatelessWidget {
   const AppFoodSelling({super.key});
 
@@ -35,23 +34,7 @@ class PageHome extends StatefulWidget {
 }
 
 class _PageHomeState extends State<PageHome> {
-  String? name, email;
-  layDulieuNgD() async {
-    name = await SharedReference().getUserName();
-    email = await SharedReference().getUserEmail();
-    setState(() {});
-  }
-
-  loadDulieu() async {
-    await layDulieuNgD();
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    loadDulieu();
-    super.initState();
-  }
+  final user = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,9 +44,29 @@ class _PageHomeState extends State<PageHome> {
       drawer: Drawer(
         child: ListView(
           children: [
-            UserAccountsDrawerHeader(
-              accountName: Text("${name}"),
-              accountEmail: Text("${email}"),
+            StreamBuilder(
+              stream: FirebaseFirestore.instance.collection("users").where("id", isEqualTo: user!.uid).snapshots(),
+              builder: (context, snapshot) {
+                if(snapshot.hasData){
+                  return ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
+                      if (snapshot.hasError) {
+                        return Text('Có lỗi xảy ra: ${snapshot.error}');
+                      }
+                      var data = snapshot.data!.docs.first.data();
+                      return UserAccountsDrawerHeader(
+                        accountName: Text("${data["name"]}"),
+                        accountEmail: Text("${data["email"]}"),
+                      );
+                    },
+                  );
+                }else return CircularProgressIndicator();
+              }
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -189,7 +192,7 @@ class _PageHomeState extends State<PageHome> {
   }
 }
 
-Future SignOut() async {
-  await FirebaseAuth.instance.signOut();
+void SignOut() async {
+  FirebaseAuth.instance.signOut();
 }
 

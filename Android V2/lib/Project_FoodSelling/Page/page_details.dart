@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/shared_references.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/userdatabase.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class PageDetail extends StatefulWidget {
-  Food f;
+  final Food f;
   PageDetail({required this.f, super.key});
 
   @override
@@ -12,25 +14,34 @@ class PageDetail extends StatefulWidget {
 
 class _PageDetailState extends State<PageDetail> {
   int a = 1, total = 0;
-  String? name, email;
+  String? name, email, id;
 
-  layDulieuNgD() async {
-    name = await SharedReference().getUserName();
-    email = await SharedReference().getUserEmail();
-    setState(() {});
-  }
-
-  loadDulieu() async {
-    await layDulieuNgD();
-    setState(() {});
+  Future<void> getUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          var userData = userDoc.data();
+          setState(() {
+            id = userData?['id'];
+            name = userData?['name'];
+            email = userData?['email'];
+          });
+        }
+      } catch (e) {
+        print(e);
+      }
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    loadDulieu();
+    getUserData();
     total = int.parse(widget.f.gia.toString());
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,11 +57,12 @@ class _PageDetailState extends State<PageDetail> {
               child: Icon(Icons.arrow_back_ios),
             ),
             Container(
-              height: 300,width: MediaQuery.of(context).size.width,
-              child: widget.f.anh == null ? Icon(Icons.image_not_supported):Image.network(widget.f.anh!),
+              height: 300,
+              width: MediaQuery.of(context).size.width,
+              child: widget.f.anh == null ? Icon(Icons.image_not_supported) : Image.network(widget.f.anh!),
             ),
-            Text("${widget.f.ten}", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),),
-            SizedBox(height: 20,),
+            Text("${widget.f.ten}", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
             Row(
               children: [
                 Expanded(flex: 1, child: Text("Số lượng:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
@@ -60,7 +72,7 @@ class _PageDetailState extends State<PageDetail> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          if(a > 1){
+                          if (a > 1) {
                             --a;
                             total = total - int.parse(widget.f.gia.toString());
                           }
@@ -68,13 +80,9 @@ class _PageDetailState extends State<PageDetail> {
                         },
                         child: Icon(Icons.remove_circle),
                       ),
-                      SizedBox(
-                        width: 20.0,
-                      ),
-                      Text("${a}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                      SizedBox(
-                        width: 20.0,
-                      ),
+                      SizedBox(width: 20.0),
+                      Text("$a", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      SizedBox(width: 20.0),
                       GestureDetector(
                         onTap: () {
                           ++a;
@@ -88,8 +96,8 @@ class _PageDetailState extends State<PageDetail> {
                 ),
               ],
             ),
-            SizedBox(height: 20,),
-            Text("${widget.f.mota}", style: TextStyle(fontSize: 18),),
+            SizedBox(height: 20),
+            Text("${widget.f.mota}", style: TextStyle(fontSize: 18)),
             Spacer(),
             Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
@@ -99,7 +107,7 @@ class _PageDetailState extends State<PageDetail> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Giá", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                        Text("Giá", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                         Text("${total} VNĐ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.red)),
                       ],
                     ),
@@ -111,7 +119,7 @@ class _PageDetailState extends State<PageDetail> {
                         builder: (context) {
                           return AlertDialog(
                             title: Text("Đặt hàng?"),
-                            content: Text("${widget.f.ten}\nSố lượng: ${a}\nTổng: ${total} VNĐ"),
+                            content: Text("${widget.f.ten}\nSố lượng: $a\nTổng: $total VNĐ"),
                             actions: [
                               MaterialButton(
                                 onPressed: () {
@@ -119,12 +127,13 @@ class _PageDetailState extends State<PageDetail> {
                                   Navigator.pop(context);
                                 },
                                 child: Text("Có"),
-                              ),MaterialButton(
+                              ),
+                              MaterialButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
                                 child: Text("Không"),
-                              )
+                              ),
                             ],
                           );
                         },
@@ -134,28 +143,29 @@ class _PageDetailState extends State<PageDetail> {
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                       decoration: BoxDecoration(
                         color: Colors.black,
-                        borderRadius: BorderRadius.circular(20)
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
-                          Text("Đặt hàng", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),),
-                          SizedBox(width: 10,),
-                          Icon(Icons.add_shopping_cart, color: Colors.white,)
+                          Text("Đặt hàng", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                          SizedBox(width: 10),
+                          Icon(Icons.add_shopping_cart, color: Colors.white),
                         ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  dathang() async{
+  dathang() async {
     Map<String, dynamic> OrderInfo = {
+      "idUser": id,
       "name": name,
       "email": email,
       "tensp": widget.f.ten,
@@ -170,8 +180,8 @@ class _PageDetailState extends State<PageDetail> {
       builder: (context) => AlertDialog(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green,),
-            Text("Đặt hàng thành công")
+            Icon(Icons.check_circle, color: Colors.green),
+            Text("Đặt hàng thành công"),
           ],
         ),
       ),
