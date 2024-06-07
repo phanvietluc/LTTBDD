@@ -12,16 +12,16 @@ class PageProfile extends StatefulWidget {
 class _PageProfileState extends State<PageProfile> {
   String? name, email;
   TextEditingController txtPassword = TextEditingController();
+  TextEditingController txtCurrentPassword = TextEditingController();
   bool isEditingPassword = false;
-
   bool obserText = true;
+  bool currentObserText = true;
 
   @override
   void initState() {
     super.initState();
     getUserData();
   }
-
 
   getUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -33,11 +33,53 @@ class _PageProfileState extends State<PageProfile> {
           setState(() {
             name = userData?['name'];
             email = userData?['email'];
-            txtPassword.text = userData?['password']; // Masking the password as it should not be directly accessible
           });
         }
       } catch (e) {
         print(e);
+      }
+    }
+  }
+
+  reauthenticateUser() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: txtCurrentPassword.text
+      );
+
+      try {
+        await user.reauthenticateWithCredential(credential);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 10),
+                Text("Xác thực thành công"),
+              ],
+            ),
+          ),
+        );
+        setState(() {
+          isEditingPassword = true;
+        });
+      } catch (e) {
+        print(e);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(width: 10),
+                Text("Xác thực thất bại"),
+              ],
+            ),
+          ),
+        );
       }
     }
   }
@@ -47,16 +89,14 @@ class _PageProfileState extends State<PageProfile> {
     if (user != null && txtPassword.text.isNotEmpty) {
       try {
         await user.updatePassword(txtPassword.text);
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'password': txtPassword.text,
-        });
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green,),
-                Text("Thay đổi mật khẩu thành công")
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 10),
+                Text("Thay đổi mật khẩu thành công"),
               ],
             ),
           ),
@@ -66,6 +106,18 @@ class _PageProfileState extends State<PageProfile> {
         });
       } catch (e) {
         print(e);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(width: 10),
+                Text("Không thể thay đổi mật khẩu"),
+              ],
+            ),
+          ),
+        );
       }
     }
   }
@@ -89,7 +141,7 @@ class _PageProfileState extends State<PageProfile> {
                 SizedBox(height: 30.0),
                 profileInfoCard(Icons.email, "Email", email),
                 SizedBox(height: 30.0),
-                profileInfoCard(Icons.password, "Password", '********'), // Masking the password
+                profileInfoCard(Icons.password, "Password", '********'),
                 SizedBox(height: 30.0),
               ],
             ),
@@ -126,8 +178,7 @@ class _PageProfileState extends State<PageProfile> {
                       title,
                       style: TextStyle(color: Colors.black, fontSize: 16.0, fontWeight: FontWeight.w600),
                     ),
-                    isEditingPassword && title == "Password"
-                        ? TextField(
+                    isEditingPassword && title == "Password" ? TextField(
                       controller: txtPassword,
                       obscureText: obserText,
                       decoration: InputDecoration(
@@ -158,12 +209,50 @@ class _PageProfileState extends State<PageProfile> {
                   flex: 1,
                   child: IconButton(
                     onPressed: () {
-                      setState(() {
-                        if (title == "Password") {
-                          isEditingPassword = !isEditingPassword;
-                          if (!isEditingPassword) updatePassword();
-                        }
-                      });
+                      if (isEditingPassword) {
+                        updatePassword();
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Xác thực người dùng"),
+                            content: TextField(
+                              controller: txtCurrentPassword,
+                              obscureText: currentObserText,
+                              decoration: InputDecoration(
+                                hintText: "Nhập mật khẩu hiện tại",
+                                suffixIcon: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      currentObserText = !currentObserText;
+                                    });
+                                    FocusScope.of(context).unfocus();
+                                  },
+                                  child: Icon(
+                                    currentObserText ? Icons.visibility : Icons.visibility_off,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text("Hủy"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  reauthenticateUser();
+                                },
+                                child: Text("Xác thực"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     },
                     icon: Icon(isEditingPassword && title == "Password" ? Icons.save : Icons.edit),
                   ),

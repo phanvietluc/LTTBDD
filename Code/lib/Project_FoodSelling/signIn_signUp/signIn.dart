@@ -139,6 +139,9 @@ class _SignInPageState extends State<SignInPage> {
                         width: MediaQuery.of(context).size.width * 3/5,
                         child: ElevatedButton(
                             onPressed: () {
+                              if(_formKey.currentState!.validate()){
+                                setState(() {});
+                              }
                               signIn();
                             },
                             child: Text(

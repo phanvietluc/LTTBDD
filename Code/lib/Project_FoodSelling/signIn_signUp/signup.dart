@@ -32,7 +32,6 @@ class _SignUpPageState extends State<SignUpPage> {
         "name": userName.text,
         "email": userEmail.text,
         "id": Id,
-        "password": userPassword.text
       };
       await UserDatabase().addUserDetail(addUserInfo, Id);
     }on FirebaseException catch (e) {
@@ -136,6 +135,9 @@ class _SignUpPageState extends State<SignUpPage> {
                         width: MediaQuery.of(context).size.width * 3/5,
                         child: ElevatedButton(
                             onPressed: () {
+                              if(_formKey.currentState!.validate()){
+                                setState(() {});
+                              }
                               signUp();
                             },
                             child: Text(
