@@ -23,7 +23,7 @@ class _OrderPageState extends State<OrderPage> {
   loadUserData() async {
     user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      loadOrderData(user!.uid);
+      await loadOrderData(user!.uid);
     }
   }
 
