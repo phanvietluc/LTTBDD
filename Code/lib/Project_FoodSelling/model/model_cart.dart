@@ -52,7 +52,7 @@ class CartSnapshot{
     return FirebaseFirestore.instance.collection("orders").add(cart.toJson());
   }
 
-  static Future<void> updateStatusPr(String id) async{
+  Future<void> updateStatusPr(String id) async{
     return await FirebaseFirestore.instance.collection('orders').doc(id).update({"trangthai": "Đã giao"});
   }
 
