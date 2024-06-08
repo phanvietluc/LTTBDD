@@ -4,11 +4,8 @@ import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_categor
 class FoodController extends GetxController{
   var _ds = <Food>[];
   var _ct = <Categories>[];
-  final _gh = <GH_Item>[];
   List<Food> get ds => _ds;
   List<Categories> get ct => _ct;
-  List<GH_Item> get gh => _gh;
-  int get slMatHangGH => gh.length;
   static FoodController get() => Get.find<FoodController>();
 
 

@@ -70,9 +70,3 @@ class FoodSnapshot{
     ).toList();
   }
 }
-
-class GH_Item{
-  String idSP;
-  int sl;
-  GH_Item({required this.idSP, required this.sl});
-}

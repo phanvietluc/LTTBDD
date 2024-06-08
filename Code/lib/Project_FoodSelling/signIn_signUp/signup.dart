@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/userdatabase.dart';
+import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_user.dart';
 class SignUpPage extends StatefulWidget {
   final Function()? onPress;
   const SignUpPage({super.key, required this.onPress});
@@ -13,7 +14,6 @@ String p = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\
 
 RegExp regExp = new RegExp(p);
 class _SignUpPageState extends State<SignUpPage> {
-
   bool obserText = true;
   TextEditingController userName = TextEditingController();
   TextEditingController userEmail = TextEditingController();
@@ -21,19 +21,23 @@ class _SignUpPageState extends State<SignUpPage> {
   void signUp() async{
     try{
       await FirebaseAuth.instance.createUserWithEmailAndPassword(email: userEmail.text.trim(), password: userPassword.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar((SnackBar(
-          backgroundColor: Colors.green,
-          content: Text(
-            "Đăng ký thành công",
-            style: TextStyle(fontSize: 20.0),
-          ))));
       String Id = FirebaseAuth.instance.currentUser!.uid;
-      Map<String, dynamic> addUserInfo = {
-        "name": userName.text,
-        "email": userEmail.text,
-        "id": Id,
-      };
-      await UserDatabase().addUserDetail(addUserInfo, Id);
+      UserModel user = UserModel(id: Id, ten: userName.text.trim(), email: userEmail.text.trim());
+      UserSnapshot.themUser(user).then(
+        (value) => ScaffoldMessenger.of(context).showSnackBar((SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              "Đăng ký thành công",
+              style: TextStyle(fontSize: 20.0),
+            ))))
+      ).catchError(
+          (error) => ScaffoldMessenger.of(context).showSnackBar((SnackBar(
+              backgroundColor: Colors.green,
+              content: Text(
+                "Đăng ký không thành công",
+                style: TextStyle(fontSize: 20.0),
+              ))))
+      );
     }on FirebaseException catch (e) {
       if (e.code == "email-already-in-use") {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

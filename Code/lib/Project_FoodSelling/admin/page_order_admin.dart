@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/userdatabase.dart';
+import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_cart.dart';
 
 class OrderPageAdmin extends StatefulWidget {
   const OrderPageAdmin({super.key});
@@ -10,10 +9,10 @@ class OrderPageAdmin extends StatefulWidget {
 }
 
 class _OrderPageAdminState extends State<OrderPageAdmin> {
-  Stream? orderStream;
+  Stream<List<CartSnapshot>>? orderStream;
 
   loadDulieu() async {
-    orderStream = await UserDatabase().geAllOrder();
+    orderStream = await CartSnapshot.getAllOrder();
     setState(() {});
   }
 
@@ -32,10 +31,19 @@ class _OrderPageAdminState extends State<OrderPageAdmin> {
         body: StreamBuilder(
           stream: orderStream,
           builder: (context, snapshot) {
-            return snapshot.hasData ?
-            ListView.separated(
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text("Có lỗi xảy ra: ${snapshot.error}"));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text("Không có đơn hàng nào được đặt"));
+            }
+            var list = snapshot.data!;
+            return ListView.separated(
               itemBuilder: (context, index) {
-                DocumentSnapshot dsHH = snapshot.data.docs[index];
+                var dsHH = list[index];
                 return Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: Row(
@@ -44,20 +52,20 @@ class _OrderPageAdminState extends State<OrderPageAdmin> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Tên KH: ${dsHH['name']}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                          Text("Email: ${dsHH['email']}", style: TextStyle(fontSize: 16),),
-                          Text("SPĐH: ${dsHH['tensp']}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                          Text("Số lượng: ${dsHH['soluong']}"),
+                          Text("Tên KH: ${dsHH.cart.tenUser}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
+                          Text("Email: ${dsHH.cart.email}", style: TextStyle(fontSize: 16),),
+                          Text("SPĐH: ${dsHH.cart.tenSP}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
+                          Text("Số lượng: ${dsHH.cart.tenSP}"),
                           Row(
                             children: [
                               Text("Tổng cộng: "),
-                              Text(" ${dsHH['tong']} VNĐ", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),)
+                              Text(" ${dsHH.cart.tong} VNĐ", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),)
                             ],
                           ),
                           SizedBox(height: 20,),
                           GestureDetector(
                             onTap: () async {
-                              await UserDatabase().updateStatusPr(dsHH.id);
+                              await CartSnapshot.updateStatusPr(dsHH.reference.id);
                             },
                             child: Container(
                               width: 100,
@@ -75,8 +83,8 @@ class _OrderPageAdminState extends State<OrderPageAdmin> {
                 );
               },
               separatorBuilder: (context, index) => Divider(thickness: 1.5,),
-              itemCount: snapshot.data.docs.length,
-            ) : Center(child: Text("Bạn chưa đặt đơn hàng nào"));
+              itemCount: snapshot.data!.length,
+            );
           },
         )
     );

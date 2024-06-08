@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/Page/page_order.dart';
+import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_user.dart';
 import 'package:viet_luc63132246_flutter/widget/widget_connect_firebase.dart';
 import 'package:get/get.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/controller/controller.dart';
@@ -44,26 +45,14 @@ class _PageHomeState extends State<PageHome> {
       drawer: Drawer(
         child: ListView(
           children: [
-            StreamBuilder(
-              stream: FirebaseFirestore.instance.collection("users").where("id", isEqualTo: user!.uid).snapshots(),
+            StreamBuilder<UserSnapshot>(
+              stream: UserSnapshot.getUser(user!.uid),
               builder: (context, snapshot) {
                 if(snapshot.hasData){
-                  return ListView.builder(
-                    itemCount: snapshot.data!.docs.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Có lỗi xảy ra: ${snapshot.error}');
-                      }
-                      var data = snapshot.data!.docs.first.data();
-                      return UserAccountsDrawerHeader(
-                        accountName: Text("${data["name"]}"),
-                        accountEmail: Text("${data["email"]}"),
-                      );
-                    },
+                  var data = snapshot.data!;
+                  return UserAccountsDrawerHeader(
+                    accountName: Text("${data.user.ten}"),
+                    accountEmail: Text("${data.user.email}"),
                   );
                 }else return CircularProgressIndicator();
               }

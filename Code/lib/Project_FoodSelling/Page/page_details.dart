@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/userdatabase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_cart.dart';
+import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_user.dart';
 
 class PageDetail extends StatefulWidget {
   final Food f;
@@ -20,15 +21,12 @@ class _PageDetailState extends State<PageDetail> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          var userData = userDoc.data();
-          setState(() {
-            id = userData?['id'];
-            name = userData?['name'];
-            email = userData?['email'];
-          });
-        }
+        var userDoc = await UserSnapshot.getUser1(user.uid);
+        setState(() {
+          id = userDoc.user.id;
+          email = userDoc.user.email;
+          name = userDoc.user.ten;
+        });
       } catch (e) {
         print(e);
       }
@@ -164,28 +162,44 @@ class _PageDetailState extends State<PageDetail> {
   }
 
   dathang() async {
-    Map<String, dynamic> OrderInfo = {
-      "idUser": id,
-      "name": name,
-      "email": email,
-      "tensp": widget.f.ten,
-      "soluong": a,
-      "tong": total,
-      "anhsp": widget.f.anh,
-      "trangthai": "Đang giao hàng",
-    };
-    await UserDatabase().addOrderDetail(OrderInfo);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            Text("Đặt hàng thành công"),
-          ],
-        ),
-      ),
+    Cart cart = Cart(
+      idUser: id!,
+      tenUser: name!,
+      email: email!,
+      tenSP: widget.f.ten,
+      anhsp: widget.f.anh!,
+      sl: a,
+      tong: total,
+      trangthai: "Đang giao hàng"
     );
-    Navigator.pop(context);
+    CartSnapshot.themOrder(cart).then(
+      (value) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                Text("Đặt hàng thành công"),
+              ],
+            ),
+          ),
+        );
+        Navigator.pop(context);
+      },
+    ).catchError((error){
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              Text("Đặt hàng không thành công"),
+            ],
+          ),
+        ),
+      );
+      Navigator.pop(context);
+    });;
   }
 }

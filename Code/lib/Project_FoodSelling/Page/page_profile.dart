@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_user.dart';
 
 class PageProfile extends StatefulWidget {
   const PageProfile({super.key});
@@ -27,14 +28,11 @@ class _PageProfileState extends State<PageProfile> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          var userData = userDoc.data();
-          setState(() {
-            name = userData?['name'];
-            email = userData?['email'];
-          });
-        }
+        var userDoc = await UserSnapshot.getUser1(user.uid);
+        setState(() {
+          email = userDoc.user.email;
+          name = userDoc.user.ten;
+        });
       } catch (e) {
         print(e);
       }
