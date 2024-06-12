@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:viet_luc63132246_flutter/Project_FoodSelling/database/userdatabase.dart';
 import 'package:viet_luc63132246_flutter/Project_FoodSelling/model/model_user.dart';
 class SignUpPage extends StatefulWidget {
   final Function()? onPress;

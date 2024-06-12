@@ -51,11 +51,10 @@ class CartSnapshot{
   static Future<DocumentReference> themOrder(Cart cart) async{
     return FirebaseFirestore.instance.collection("orders").add(cart.toJson());
   }
-
-  Future<void> updateStatusPr(String id) async{
-    return await FirebaseFirestore.instance.collection('orders').doc(id).update({"trangthai": "Đã giao"});
+  
+  Future<void> updateStatusOrder(Cart cart) async{
+    return reference.update(cart.toJson());
   }
-
   static Stream<List<CartSnapshot>> getOrder(String id) {
     Stream<QuerySnapshot> sqs = FirebaseFirestore.instance.collection("orders").where("idUser", isEqualTo: id).snapshots();
     return sqs.map(

@@ -65,7 +65,17 @@ class _OrderPageAdminState extends State<OrderPageAdmin> {
                           SizedBox(height: 20,),
                           GestureDetector(
                             onTap: () async {
-                              await dsHH.updateStatusPr(dsHH.reference.id);
+                              Cart cart = Cart(
+                                  idUser: dsHH.cart.idUser,
+                                  tenUser: dsHH.cart.tenUser,
+                                  email: dsHH.cart.email,
+                                  tenSP: dsHH.cart.tenSP,
+                                  anhsp: dsHH.cart.anhsp,
+                                  sl:dsHH.cart.sl,
+                                  tong: dsHH.cart.tong,
+                                  trangthai: "Đã giao"
+                              );
+                              await dsHH.updateStatusOrder(cart);
                             },
                             child: Container(
                               width: 100,
